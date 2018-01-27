@@ -3,6 +3,8 @@ import Interpreter from 'js-interpreter';
 
 const PERIOD = 100;
 const TIME_STEPS = 100;
+const MAX_NUMBER_OF_LINES = 30;
+const EDITOR_COLS = 80;
 
 class App extends Component {
     constructor(props) {
@@ -13,6 +15,7 @@ class App extends Component {
             run: false,
             lastCodeThatWorked: '',
             code: '',
+            numberOfLines: 1,
             t: 0
         };
     }
@@ -59,15 +62,55 @@ class App extends Component {
     }
 
     handleEditorChange(e) {
-        this.setState({ code: e.target.value });
+        const value = e.target.value;
+        const split = value.split('\n');
+        const numberOfLines = Math.min(split.length, MAX_NUMBER_OF_LINES);
+
+        const code = split.slice(0, numberOfLines).join('\n');
+
+        this.setState({
+            code
+        });
+    }
+
+    getLineNumbers() {
+        const lines = this.state.code.split('\n');
+
+        let lineNumbers = '';
+        let lineNumber = 1;
+
+        lines.forEach((line) => {
+            // insert blank lines for lines over column limit
+            const linesInLine = Math.ceil(line.length / (EDITOR_COLS - 13));
+
+            lineNumbers += `${lineNumber}\n`;
+            for (let i = 0; i < linesInLine - 1; i++) {
+                lineNumbers += ' \n';
+            }
+
+            lineNumber++;
+        });
+
+        return lineNumbers;
     }
 
     render() {
         return (
             <div className="main">
-                <canvas ref={this.getCanvasRef.bind(this)} id="canvas" width="100" height="100"></canvas>
-                <textarea id="editor" cols="50" rows="10" onChange={this.handleEditorChange.bind(this)}></textarea>
-                <button id="button" onClick={this.toggleRun.bind(this)} type="button">Run</button>
+                <div className="left">
+                    <div className="editor-buttons">
+                        <input id="block-name" defaultValue="/HelloWorld" type="text" />
+                        <button id="button-run" onClick={this.toggleRun.bind(this)} type="button">Run</button>
+                        <button id="button-save" onClick={this.toggleRun.bind(this)} type="button">Save</button>
+                    </div>
+                    <div id="editor">
+                        <textarea id="editor-line-numbers" disabled={true} value={this.getLineNumbers()}></textarea>
+                        <textarea id="editor-input" value={this.state.code} cols={EDITOR_COLS} rows="10" onChange={this.handleEditorChange.bind(this)}></textarea>
+                    </div>
+                </div>
+                <div className="right">
+                    <canvas ref={this.getCanvasRef.bind(this)} id="canvas" width="100" height="100"></canvas>
+                </div>
             </div>
         );
     }

@@ -18295,6 +18295,8 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 var PERIOD = 100;
 var TIME_STEPS = 100;
+var MAX_NUMBER_OF_LINES = 30;
+var EDITOR_COLS = 80;
 
 var App = function (_Component) {
     _inherits(App, _Component);
@@ -18309,6 +18311,7 @@ var App = function (_Component) {
             run: false,
             lastCodeThatWorked: '',
             code: '',
+            numberOfLines: 1,
             t: 0
         };
         return _this;
@@ -18366,7 +18369,37 @@ var App = function (_Component) {
     }, {
         key: 'handleEditorChange',
         value: function handleEditorChange(e) {
-            this.setState({ code: e.target.value });
+            var value = e.target.value;
+            var split = value.split('\n');
+            var numberOfLines = Math.min(split.length, MAX_NUMBER_OF_LINES);
+
+            var code = split.slice(0, numberOfLines).join('\n');
+
+            this.setState({
+                code: code
+            });
+        }
+    }, {
+        key: 'getLineNumbers',
+        value: function getLineNumbers() {
+            var lines = this.state.code.split('\n');
+
+            var lineNumbers = '';
+            var lineNumber = 1;
+
+            lines.forEach(function (line) {
+                // insert blank lines for lines over column limit
+                var linesInLine = Math.ceil(line.length / (EDITOR_COLS - 13));
+
+                lineNumbers += lineNumber + '\n';
+                for (var i = 0; i < linesInLine - 1; i++) {
+                    lineNumbers += ' \n';
+                }
+
+                lineNumber++;
+            });
+
+            return lineNumbers;
         }
     }, {
         key: 'render',
@@ -18374,12 +18407,35 @@ var App = function (_Component) {
             return _react2.default.createElement(
                 'div',
                 { className: 'main' },
-                _react2.default.createElement('canvas', { ref: this.getCanvasRef.bind(this), id: 'canvas', width: '100', height: '100' }),
-                _react2.default.createElement('textarea', { id: 'editor', cols: '50', rows: '10', onChange: this.handleEditorChange.bind(this) }),
                 _react2.default.createElement(
-                    'button',
-                    { id: 'button', onClick: this.toggleRun.bind(this), type: 'button' },
-                    'Run'
+                    'div',
+                    { className: 'left' },
+                    _react2.default.createElement(
+                        'div',
+                        { className: 'editor-buttons' },
+                        _react2.default.createElement('input', { id: 'block-name', defaultValue: '/HelloWorld', type: 'text' }),
+                        _react2.default.createElement(
+                            'button',
+                            { id: 'button-run', onClick: this.toggleRun.bind(this), type: 'button' },
+                            'Run'
+                        ),
+                        _react2.default.createElement(
+                            'button',
+                            { id: 'button-save', onClick: this.toggleRun.bind(this), type: 'button' },
+                            'Save'
+                        )
+                    ),
+                    _react2.default.createElement(
+                        'div',
+                        { id: 'editor' },
+                        _react2.default.createElement('textarea', { id: 'editor-line-numbers', disabled: true, value: this.getLineNumbers() }),
+                        _react2.default.createElement('textarea', { id: 'editor-input', value: this.state.code, cols: EDITOR_COLS, rows: '10', onChange: this.handleEditorChange.bind(this) })
+                    )
+                ),
+                _react2.default.createElement(
+                    'div',
+                    { className: 'right' },
+                    _react2.default.createElement('canvas', { ref: this.getCanvasRef.bind(this), id: 'canvas', width: '100', height: '100' })
                 )
             );
         }
