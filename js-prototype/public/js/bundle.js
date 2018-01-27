@@ -75,6 +75,13 @@ var Interpreter = __webpack_require__(1);
 var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d');
 
+var INTERVAL = 100;
+var MAX_I = 100;
+var i = 0;
+var RUN = false;
+var ERROR = false;
+var lastCodeThatWorked = "";
+
 var initFunc = function initFunc(interpreter, scope) {
 
     var draw = function draw(x, y, width, height, style) {
@@ -83,17 +90,32 @@ var initFunc = function initFunc(interpreter, scope) {
     };
 
     interpreter.setProperty(scope, 'draw', interpreter.createNativeFunction(draw));
+    interpreter.setProperty(scope, 't', interpreter.createPrimitive(i));
 };
 
 var btn = document.getElementById('button');
 
-btn.addEventListener('click', function (e) {
-    var editor = document.getElementById('editor');
-    var code = editor.value;
-
-    var myInterpreter = new Interpreter(code, initFunc);
-    myInterpreter.run();
+btn.addEventListener('click', function () {
+    RUN = !RUN;
 });
+
+setInterval(function () {
+    if (RUN) {
+        var editor = document.getElementById('editor');
+        var code = editor.value;
+        var interpreter = void 0;
+        try {
+            interpreter = new Interpreter(code, initFunc);
+            interpreter.run();
+            lastCodeThatWorked = code;
+        } catch (e) {
+            interpreter = new Interpreter(lastCodeThatWorked, initFunc);
+            interpreter.run();
+        }
+
+        i = (i + 1) % MAX_I;
+    }
+}, INTERVAL);
 
 /***/ }),
 /* 1 */
